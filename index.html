@@ -161,7 +161,7 @@
     <h2><span class="em">📊</span> 实时排名 <span class="tag">累计减重%</span></h2>
     <div class="tiles" id="rankTiles"></div>
     <table style="margin-top:16px">
-      <thead><tr><th>排名</th><th style="text-align:left">选手</th><th>初始体重</th><th>最新体重</th><th>累计减重%</th><th>走势</th></tr></thead>
+      <thead><tr><th>排名</th><th style="text-align:left">选手</th><th>初始体重</th><th>最新体重</th><th>累计减重%</th><th>累计减重（斤）</th></tr></thead>
       <tbody id="rankBody"></tbody>
     </table>
     <div class="note">累计减重% =（初始体重 − 最新体重）÷ 初始体重。初始体重取表格「初始体重⭐️」一行（官方起点）。</div>
@@ -321,6 +321,13 @@ function missed(p){
     if(!(STATE.records[d] && STATE.records[d][p.id]!=null)) c++; }
   return c;
 }
+function missedDates(p){
+  const t=todayISO(); const end = t<STATE.comp.end? t : STATE.comp.end;
+  const dates=[];
+  for(let d=p.join; d<=end; d=addDays(d,1)){
+    if(!(STATE.records[d] && STATE.records[d][p.id]!=null)) dates.push(d); }
+  return dates;
+}
 function rankList(){ return STATE.participants.map(p=>({p, cum:cumulative(p)})).filter(x=>x.cum!=null).sort((a,b)=>b.cum-a.cum); }
 function awardLeaders(){
   const cum=rankList();
@@ -364,12 +371,13 @@ function renderStats(){
   }).join("") || `<div class="empty">暂无数据</div>`;
 
   document.getElementById("rankBody").innerHTML = rl.map((x,i)=>{
-    const l=latest(x.p); const w=(x.cum/maxCum*100);
+    const l=latest(x.p);
+    const jin = l? (x.p.baseline - l.weight) : null;
     return `<tr><td class="${i===0?'rank1':''}">${i+1}</td>
       <td class="name"><span class="dot" style="background:${x.p.color}"></span>${x.p.name}</td>
       <td>${f1(x.p.baseline)}</td><td>${l?f1(l.weight):'—'}</td>
       <td class="${x.cum>=0?'pos':'neg'}">${x.cum>=0?'−':''}${f1(Math.abs(x.cum))}%</td>
-      <td><div class="bar"><span style="width:${w}%;background:${x.p.color}"></span></div></td></tr>`;
+      <td>${jin!=null? f1(jin)+' <span style="color:var(--sub);font-weight:600">斤</span>':'—'}</td></tr>`;
   }).join("");
 
   drawChart();
@@ -532,13 +540,15 @@ function renderAwards(){
 function renderPenalty(){
   const curM=Math.min(3,Math.max(1,Number(todayISO().slice(5,7))-7));
   document.getElementById("penList").innerHTML=STATE.participants.map(p=>{
-    const ms=missed(p);
+    const dates=missedDates(p);
+    const ms=dates.length;
     const ms2=monthStats(p,curM);
     const reb=ms2&&ms2.rebounding;
     const coffee=ms>=2;
     const tag= coffee? `<span class="pill warn">☕请咖啡</span>` : (ms===1?`<span class="pill">缺卡1次</span>`:`<span class="pill ok">全勤</span>`);
     const rebTag= reb? `<span class="pill warn">⚠️当月反弹</span>` : (ms2?`<span class="pill ok">未反弹</span>`:``);
-    return `<div class="pen"><span><span class="dot" style="background:${p.color}"></span><b>${p.name}</b> &nbsp;缺卡 ${ms} 次 ${tag} ${rebTag}</span>
+    const datesStr = ms>0? ` <span style="color:var(--sub);font-size:11.5px">（${dates.map(fmtMD).join('、')}）</span>` : '';
+    return `<div class="pen"><span><span class="dot" style="background:${p.color}"></span><b>${p.name}</b> &nbsp;缺卡 ${ms} 次${datesStr} ${tag} ${rebTag}</span>
       <span class="right" style="color:var(--sub);font-size:12.5px">打卡率 ${f1(checkin(p,todayISO()))}%</span></div>`;
   }).join("");
 }
