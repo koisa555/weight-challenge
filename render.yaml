@@ -12,5 +12,9 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "18"
+      - key: GH_REPO
+        value: "koisa555/weight-challenge"   # 数据同步到的 GitHub 仓库
+      - key: GH_TOKEN        # GitHub Token（repo 权限），用于把数据提交回仓库、实现永久持久化。留空则数据只存临时盘（会丢）
+        sync: false
       - key: PASS            # 编辑口令（选填）。留空则任何人都能改数据；填了则网页需输入此口令才能保存
         sync: false
