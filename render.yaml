@@ -1,0 +1,16 @@
+# Render 一键部署蓝图
+# 在 Render 新建 Blueprints 仓库时关联本文件即可自动按此配置部署。
+services:
+  - type: web
+    name: weight-challenge
+    runtime: node
+    plan: free
+    region: singapore        # 离中国大陆最近，访问更快
+    branch: main
+    buildCommand: "npm install"
+    startCommand: "node server.js"
+    envVars:
+      - key: NODE_VERSION
+        value: "18"
+      - key: PASS            # 编辑口令（选填）。留空则任何人都能改数据；填了则网页需输入此口令才能保存
+        sync: false

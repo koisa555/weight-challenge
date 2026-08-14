@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4人减脂挑战赛 · 实时共享看板</title>
+<style>
+  :root{
+    --bg:#f3f5fb; --card:#ffffff; --ink:#1f2430; --sub:#6b7488; --line:#e5e9f2;
+    --c丹:#ff3b6b; --c婷:#3b82f6; --c莹:#10b981; --c超:#f59e0b;
+    --brand:#6366f1; --brand2:#8b5cf6; --gold:#f59e0b; --ok:#10b981; --bad:#ef4444;
+    --shadow:0 10px 30px -14px rgba(40,50,90,.18);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%,#e9ecff 0%,var(--bg) 55%);color:var(--ink);
+    line-height:1.55;-webkit-text-size-adjust:100%}
+  .wrap{max-width:980px;margin:0 auto;padding:18px 16px 70px}
+  /* hero */
+  .hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#6366f1,#8b5cf6 55%,#a855f7);
+    color:#fff;border-radius:26px;padding:26px 24px;box-shadow:var(--shadow)}
+  .hero::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;
+    background:radial-gradient(circle,rgba(255,255,255,.25),transparent 70%);border-radius:50%}
+  .hero h1{margin:0;font-size:25px;letter-spacing:.5px;font-weight:800}
+  .hero .meta{opacity:.92;font-size:13.5px;margin-top:6px}
+  .pools{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .pool{flex:1;min-width:120px;background:rgba(255,255,255,.16);backdrop-filter:blur(4px);
+    border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:12px 14px}
+  .pool .v{font-size:21px;font-weight:800}
+  .pool .l{font-size:12px;opacity:.9;margin-top:2px}
+  .progress{margin-top:16px}
+  .progress .bar{height:9px;border-radius:9px;background:rgba(255,255,255,.25);overflow:hidden}
+  .progress .bar>span{display:block;height:100%;background:#fff;border-radius:9px;transition:width .6s}
+  .progress .lab{font-size:12px;opacity:.92;margin-top:6px;display:flex;justify-content:space-between}
+  /* nav */
+  .nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .nav a{font-size:12.5px;color:var(--brand);text-decoration:none;background:#fff;border:1px solid var(--line);
+    padding:6px 12px;border-radius:999px;box-shadow:var(--shadow);font-weight:600}
+  /* card */
+  .card{background:var(--card);border-radius:20px;padding:22px;margin-top:18px;box-shadow:var(--shadow);border:1px solid var(--line)}
+  .card h2{margin:0 0 16px;font-size:17px;display:flex;align-items:center;gap:9px;font-weight:800}
+  .card h2 .em{font-size:19px}
+  .card h2 .tag{margin-left:auto;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    padding:3px 10px;border-radius:999px}
+  /* rank tiles */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:680px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  .tile{border-radius:16px;padding:14px;color:#fff;position:relative;overflow:hidden;min-height:96px}
+  .tile .rk{font-size:13px;opacity:.95;font-weight:700}
+  .tile .pc{font-size:28px;font-weight:900;line-height:1.1;margin-top:4px}
+  .tile .nm{position:absolute;right:12px;bottom:10px;font-size:13px;opacity:.9}
+  .tile .md{position:absolute;left:14px;top:12px;font-size:18px}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--line)}
+  th{color:var(--sub);font-weight:700;font-size:12px}
+  tbody tr:hover{background:#fafbff}
+  td.name{text-align:left;font-weight:700}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:middle}
+  .bar{height:9px;border-radius:6px;background:#eef2f7;overflow:hidden;min-width:64px}
+  .bar>span{display:block;height:100%;border-radius:6px}
+  .pos{color:var(--ok);font-weight:700}.neg{color:var(--bad);font-weight:700}
+  .rank1{color:var(--gold);font-weight:800}
+  /* awards */
+  .awards{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  @media(max-width:680px){.awards{grid-template-columns:1fr}}
+  .award{border:1px solid var(--line);border-radius:16px;padding:14px 15px;background:linear-gradient(180deg,#fff,#fbfcff);position:relative}
+  .award .amt{position:absolute;top:12px;right:14px;font-size:13px;font-weight:800;color:var(--brand)}
+  .award .ico{font-size:24px}
+  .award .nm{font-weight:800;margin:5px 0 3px;font-size:14.5px}
+  .award .desc{font-size:11.5px;color:var(--sub);margin-bottom:9px}
+  .award .lead{font-size:13px}
+  .award .lead b{font-size:15px}
+  .pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:#eef1f8;color:#5b6478;margin-left:5px;font-weight:600}
+  .pill.warn{background:#fee2e2;color:#dc2626}.pill.ok{background:#dcfce7;color:#059669}
+  /* penalty */
+  .pen{display:flex;justify-content:space-between;align-items:center;padding:11px 13px;border:1px solid var(--line);
+    border-radius:13px;margin-bottom:9px;font-size:13.5px;background:#fff}
+  .pen .right{text-align:right}
+  /* === chart (Excel/Numbers 商务风) === */
+  .chartbox{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 14px 10px}
+  svg{width:100%;height:auto;display:block;overflow:visible;font-family:inherit}
+  .legend{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;font-size:13px;margin-top:14px;color:#374151;font-weight:600}
+  .legend span{cursor:pointer;user-select:none;display:flex;align-items:center;padding:4px 10px;border-radius:999px;background:#f8fafc;border:1px solid var(--line);transition:all .15s}
+  .legend span:hover{background:#eef2f7;border-color:#cbd5e1}
+  .legend span.off{opacity:.4;text-decoration:line-through;background:#fafafa}
+  .ldot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;border:2px solid #fff;box-shadow:0 0 0 1px #d1d5db}
+  .chart-tip{position:absolute;pointer-events:none;background:rgba(31,36,48,.96);color:#fff;border-radius:12px;
+    padding:10px 12px;font-size:12.5px;opacity:0;transition:opacity .12s;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:5;min-width:150px}
+  .chart-tip .row{display:flex;justify-content:space-between;gap:16px;padding:2px 0;align-items:center}
+  .chart-tip .row b{font-variant-numeric:tabular-nums}
+  /* === entry form (大卡片) === */
+  .entry-date-row{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;padding:12px 16px;background:linear-gradient(135deg,#f5f7ff,#faf5ff);border-radius:14px;border:1px solid #e0e7ff}
+  .entry-date-block{display:flex;align-items:center;gap:10px}
+  .entry-date-block .lbl{font-size:13px;color:var(--ink);font-weight:700;display:flex;align-items:center;gap:6px}
+  .entry-date-block input.date{width:160px;font-weight:700}
+  .entry-date-block button{font-size:12px;padding:8px 14px;border-radius:10px}
+  .entry-hint{font-size:12px;color:var(--sub);margin-left:auto}
+  .entry-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:680px){.entry-grid{grid-template-columns:repeat(2,1fr)}}
+  .entry-card{border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;background:#fff;position:relative;overflow:hidden;transition:all .15s}
+  .entry-card:hover{border-color:#cbd5e1;box-shadow:0 4px 12px -4px rgba(0,0,0,.08)}
+  .entry-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+  .entry-card .pname{font-size:14px;font-weight:800;display:flex;align-items:center;gap:7px;color:#1f2430}
+  .entry-card .pname .dot{width:12px;height:12px;margin-right:0}
+  .entry-card .plabel{font-size:11px;color:var(--sub);margin:10px 0 6px;font-weight:700;letter-spacing:.3px}
+  .entry-card input{width:100%;font-size:20px;font-weight:800;padding:12px 10px;text-align:center;border-radius:10px;border:1.5px solid var(--line)}
+  .entry-card input:focus{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 15%, transparent)}
+  .entry-card .prev{font-size:11.5px;color:var(--sub);margin-top:8px;text-align:center;min-height:16px}
+  .entry-card .prev .delta{font-weight:800;margin-left:4px;font-size:12.5px}
+  .entry-card .prev .delta.down{color:var(--ok)}
+  .entry-card .prev .delta.up{color:var(--bad)}
+  .entry-card .prev .delta.flat{color:var(--sub)}
+  .entry-actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap;padding-top:16px;border-top:1px dashed var(--line)}
+  .entry-actions button.big{padding:14px 26px;font-size:15px;border-radius:14px;font-weight:800}
+  .entry-tools{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;padding-top:14px;border-top:1px dashed var(--line)}
+  .entry-tools .ghost.sm{font-size:12px}
+  /* form baseline */
+  label{font-size:12px;color:var(--sub);display:block;margin-bottom:4px;font-weight:600}
+  input{padding:9px 11px;border:1px solid var(--line);border-radius:11px;font-size:14px;width:92px;background:#fff;font-family:inherit}
+  input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+  input.date{width:150px}
+  input#passInput{width:130px;font-size:12px}
+  button{cursor:pointer;border:none;border-radius:12px;padding:10px 16px;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 6px 16px -6px rgba(99,102,241,.6);font-family:inherit}
+  button.ghost{background:#f1f3fa;color:#374151;box-shadow:none}
+  button.ghost:hover{background:#e5e9f2}
+  button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 6px 16px -6px rgba(99,102,241,.6)}
+  button.primary:hover{filter:brightness(1.05)}
+  button.sm{padding:7px 12px;font-size:12.5px}
+  .note{font-size:12px;color:var(--sub);margin-top:10px;line-height:1.7}
+  .note b{color:#4b5563}
+  footer{font-size:11.5px;color:var(--sub);text-align:center;margin-top:28px;line-height:1.8}
+  .empty{color:var(--sub);font-size:13px;text-align:center;padding:22px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>🔥 4人减脂挑战赛 · 实时共享看板</h1>
+    <div class="meta">赛期 2026-08-01 → 2026-10-31（3个月） · 唯一指标：减重百分比 · 在线多人同步</div>
+    <div class="pools">
+      <div class="pool"><div class="v">¥400</div><div class="l">奖池（4×100）</div></div>
+      <div class="pool"><div class="v" id="hdElapsed">—</div><div class="l">已进行天数</div></div>
+      <div class="pool"><div class="v" id="hdRemain">—</div><div class="l">剩余天数</div></div>
+      <div class="pool"><div class="v" id="hdLeader">—</div><div class="l">当前总冠军</div></div>
+    </div>
+    <div class="progress">
+      <div class="bar"><span id="progBar" style="width:0%"></span></div>
+      <div class="lab"><span>赛季进度</span><span id="progLab">—</span></div>
+    </div>
+    <div class="nav">
+      <a href="#rank">📊 排名</a><a href="#chart">📈 曲线</a><a href="#awards">🏆 奖项</a>
+      <a href="#penalty">😈 惩罚</a><a href="#input">✍️ 报体重</a>
+    </div>
+  </div>
+
+  <div class="card" id="rank">
+    <h2><span class="em">📊</span> 实时排名 <span class="tag">累计减重%</span></h2>
+    <div class="tiles" id="rankTiles"></div>
+    <table style="margin-top:16px">
+      <thead><tr><th>排名</th><th style="text-align:left">选手</th><th>初始体重</th><th>最新体重</th><th>累计减重%</th><th>走势</th></tr></thead>
+      <tbody id="rankBody"></tbody>
+    </table>
+    <div class="note">累计减重% =（初始体重 − 最新体重）÷ 初始体重。初始体重取表格「初始体重⭐️」一行（官方起点）。</div>
+  </div>
+
+  <div class="card" id="chart">
+    <h2><span class="em">📈</span> 体重曲线 <span class="tag">每日空腹</span></h2>
+    <div class="chartbox" id="lineChart">
+      <div class="chart-tip" id="chartTip"></div>
+    </div>
+    <div class="legend" id="chartLegend"></div>
+    <div class="note">最左侧 <b>初始值</b> ＝ 4 人初始体重起点（在 8/1 之前单独留一格）；折线从初始体重出发连到每日实测。<b>鼠标悬停</b>看当天 4 人具体数值；<b>点击图例</b>可隐藏/显示某条线。绿色虚线＝莹 8/6 加入。</div>
+  </div>
+
+  <div class="card" id="awards">
+    <h2><span class="em">🏆</span> 奖项实时追踪 <span class="tag">¥400 / 6奖</span></h2>
+    <div class="awards" id="awardCards"></div>
+    <h2 style="margin-top:20px;font-size:15px"><span class="em">💰</span> 预估到手金额</h2>
+    <table>
+      <thead><tr><th style="text-align:left">选手</th><th>破冰40</th><th>突破60</th><th>总冠军160</th><th>逆袭60</th><th>坚持20</th><th>全员15</th><th>合计</th></tr></thead>
+      <tbody id="prizeBody"></tbody>
+    </table>
+    <div class="note">合计＝当前领先的奖项金额之和；若全员达标（累计≥3%）则各 +15。最终以赛季末官方数据为准。</div>
+  </div>
+
+  <div class="card" id="penalty">
+    <h2><span class="em">😈</span> 惩罚看板</h2>
+    <div id="penList"></div>
+    <div class="note">
+      • 缺卡/迟到 ≥2 次 → 请另外三人喝咖啡（自加入日起至今天，未来天数不算缺卡）。<br>
+      • 当月体重反弹（月末＞月初）→ 群内手写 200 字忏悔书 + 请当月冠军吃水果。
+    </div>
+  </div>
+
+  <div class="card" id="input">
+    <h2><span class="em">✍️</span> 每日报体重 <span class="tag">每日早晨空腹</span></h2>
+
+    <div class="entry-date-row">
+      <div class="entry-date-block">
+        <span class="lbl">📅 日期</span>
+        <input class="date" type="date" id="inDate">
+        <button type="button" class="ghost sm" id="btnToday">今天</button>
+      </div>
+      <div class="entry-hint">选日期 → 4 人各自填入 → 一键保存。留空＝当日缺卡。</div>
+    </div>
+
+    <form id="entryForm">
+      <div class="entry-grid" id="entryInputs"></div>
+      <div class="entry-actions">
+        <button type="submit" class="big">💾 保存今日体重</button>
+        <button type="button" class="ghost sm" id="btnReset">↺ 重置为初始数据</button>
+      </div>
+    </form>
+
+    <div class="entry-tools">
+      <button type="button" class="primary sm" id="btnSync">🔄 同步最新数据</button>
+      <span id="syncStatus" style="font-size:11.5px;color:var(--sub);align-self:center">—</span>
+      <button type="button" class="ghost sm" id="btnExport">⬇️ 导出备份(JSON)</button>
+      <button type="button" class="ghost sm" id="btnImport">⬆️ 导入备份(JSON)</button>
+      <input type="file" id="fileInput" accept="application/json" style="display:none">
+      <input type="text" id="passInput" placeholder="编辑口令(可选)" autocomplete="off">
+    </div>
+    <div class="note">这是 <b>在线共享版</b>：任何人用同一链接报体重，数据都汇总到服务器同一个数据库，所有人看到同步的排名与曲线。改完点「保存今日体重」即上传服务器；也可点「同步」手动刷新别人的更新（页面每 30 秒自动同步一次）。<b>编辑口令</b>仅在服务器启用了口令保护时才需要填。</div>
+
+    <h2 style="margin-top:22px;font-size:15px"><span class="em">⚙️</span> 调整初始体重（管理员）</h2>
+    <div class="row" id="baseInputs"></div>
+    <div class="note">初始体重登记有误可在此修改，排名与奖项会同步重算。</div>
+  </div>
+
+  <footer>
+    减脂挑战赛看板 · 在线共享版 · 数据存于服务器（data.json），多人实时汇总<br>
+    规则：破冰奖40 / 突破奖60 / 总冠军160 / 逆袭奖60 / 全员奖60 / 最佳坚持奖20，合计 ¥400<br>
+    月度「月初体重」：第1个月取初始体重，第2、3个月取当月首条记录；月末取当月最后一条记录。
+  </footer>
+</div>
+
+<script>
+/* ============ 常量 ============ */
+const PRIZE = {破冰:40, 突破:60, 总冠军:160, 逆袭:60, 全员:60, 坚持:20};
+const HIDDEN = {};
+let STATE = null;
+
+/* ============ 服务器通信 ============ */
+function getPass(){
+  const el=document.getElementById('passInput');
+  const v = el? el.value.trim() : '';
+  return v || (localStorage.getItem('jp')||'');
+}
+async function fetchState(){
+  const r = await fetch('/api/state');
+  if(!r.ok) throw new Error('无法连接服务器');
+  return r.json();
+}
+async function pushBulk(date, values){
+  const r = await fetch('/api/bulk', {method:'POST',
+    headers:{'Content-Type':'application/json','x-pass':getPass()},
+    body:JSON.stringify({date, values})});
+  if(r.status===403) throw new Error('编辑口令错误');
+  if(!r.ok) throw new Error('保存失败');
+  return r.json();
+}
+async function pushBaseline(person, baseline){
+  const r = await fetch('/api/baseline', {method:'POST',
+    headers:{'Content-Type':'application/json','x-pass':getPass()},
+    body:JSON.stringify({person, baseline})});
+  if(r.status===403) throw new Error('编辑口令错误');
+  if(!r.ok) throw new Error('保存失败');
+  return r.json();
+}
+async function resetServer(){
+  const r = await fetch('/api/reset', {method:'POST',
+    headers:{'Content-Type':'application/json','x-pass':getPass()}, body:'{}'});
+  if(r.status===403) throw new Error('编辑口令错误');
+  if(!r.ok) throw new Error('重置失败');
+  return r.json();
+}
+
+/* ============ 日期工具 ============ */
+function todayISO(){ const d=new Date(); const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+function parseISO(s){ return new Date(s+"T00:00:00"); }
+function addDays(iso,n){ const d=parseISO(iso); d.setDate(d.getDate()+n); const p=x=>String(x).padStart(2,'0');
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+function daysBetween(a,b){ return Math.round((parseISO(b)-parseISO(a))/86400000); }
+function fmtMD(iso){ return iso.slice(5).replace("-","/"); }
+function f1(x){ return (Math.round(x*10)/10).toFixed(1); }
+
+/* ============ 计算 ============ */
+function getReadings(p){
+  return Object.keys(STATE.records).filter(d=> d>=p.join && STATE.records[d][p.id]!=null)
+    .sort().map(d=>({date:d, weight:STATE.records[d][p.id]}));
+}
+function prevReading(p, beforeISO){
+  return getReadings(p).filter(r=>r.date<beforeISO).slice(-1)[0] || null;
+}
+function latest(p){ const r=getReadings(p); return r.length? r[r.length-1] : null; }
+function cumulative(p){ const l=latest(p); return l? (p.baseline-l.weight)/p.baseline*100 : null; }
+function monthRange(m){ return m===1?["2026-08-01","2026-08-31"]: m===2?["2026-09-01","2026-09-30"]:["2026-10-01","2026-10-31"]; }
+function monthStats(p,m){
+  const [s,e]=monthRange(m);
+  const r=getReadings(p).filter(x=> x.date>=s && x.date<=e);
+  if(!r.length) return null;
+  const startW=(m===1)? p.baseline : r[0].weight;
+  const endW=r[r.length-1].weight;
+  const pct=(startW-endW)/startW*100;
+  return {startW, endW, pct, rebounding: endW>startW};
+}
+function checkin(p, asOf){
+  const end = asOf<STATE.comp.end? asOf : STATE.comp.end;
+  const total = daysBetween(p.join, end)+1; let rep=0;
+  for(let d=p.join; d<=end; d=addDays(d,1)){ if(STATE.records[d] && STATE.records[d][p.id]!=null) rep++; }
+  return total>0? rep/total*100 : 0;
+}
+function missed(p){
+  const t=todayISO(); const end = t<STATE.comp.end? t : STATE.comp.end;
+  let c=0; for(let d=p.join; d<=end; d=addDays(d,1)){
+    if(!(STATE.records[d] && STATE.records[d][p.id]!=null)) c++; }
+  return c;
+}
+function rankList(){ return STATE.participants.map(p=>({p, cum:cumulative(p)})).filter(x=>x.cum!=null).sort((a,b)=>b.cum-a.cum); }
+function awardLeaders(){
+  const cum=rankList();
+  const m=n=> STATE.participants.map(p=>({p,s:monthStats(p,n)})).filter(x=>x.s).sort((a,b)=>b.s.pct-a.s.pct);
+  const m1=m(1),m2=m(2),m3=m(3);
+  const chk=STATE.participants.map(p=>({p,v:checkin(p,todayISO())})).sort((a,b)=>b.v-a.v);
+  const reached=STATE.participants.filter(p=>(cumulative(p)||0)>=3).length;
+  return {champion:cum[0], pobing:m1[0], tupo:m2[0], nixi:m3[0], jianchi:chk[0], allOk:reached===STATE.participants.length, reached};
+}
+function prizeProjection(){
+  const L=awardLeaders(); const map={}; STATE.participants.forEach(p=>map[p.id]=0);
+  const add=(ld,amt)=>{ if(ld&&ld.p) map[ld.p.id]+=amt; };
+  add(L.pobing,PRIZE.破冰); add(L.tupo,PRIZE.突破); add(L.champion,PRIZE.总冠军);
+  add(L.nixi,PRIZE.逆袭); add(L.jianchi,PRIZE.坚持);
+  if(L.allOk) STATE.participants.forEach(p=>map[p.id]+=15);
+  return map;
+}
+
+/* ============ 渲染 ============ */
+let CHART={};
+function renderStats(){
+  const t=todayISO();
+  const total=daysBetween(STATE.comp.start,STATE.comp.end)+1;
+  const elapsed=Math.min(total, daysBetween(STATE.comp.start,t)+1);
+  const remain=Math.max(0, daysBetween(t,STATE.comp.end));
+  const L=awardLeaders();
+  document.getElementById("hdElapsed").textContent=elapsed;
+  document.getElementById("hdRemain").textContent=remain;
+  document.getElementById("hdLeader").textContent=L.champion?L.champion.p.name:"—";
+  document.getElementById("progBar").style.width=(elapsed/total*100).toFixed(1)+"%";
+  document.getElementById("progLab").textContent=`第 ${elapsed} / ${total} 天`;
+
+  const rl=rankList(); const maxCum=Math.max(0.01,...rl.map(x=>x.cum));
+  const medalBg=["linear-gradient(135deg,#f6c45a,#e0982a)","linear-gradient(135deg,#c7d0e0,#9aa6bd)","linear-gradient(135deg,#e0a06a,#b9763f)"];
+  document.getElementById("rankTiles").innerHTML = rl.map((x,i)=>{
+    const grad = i<3? medalBg[i] : `linear-gradient(135deg,${x.p.color},${x.p.color}cc)`;
+    const md=["🥇","🥈","🥉"][i]||"";
+    return `<div class="tile" style="background:${grad}">
+      <div class="md">${md}</div><div class="rk">第${i+1}名</div>
+      <div class="pc">${f1(x.cum)}%</div><div class="nm">${x.p.name}</div></div>`;
+  }).join("") || `<div class="empty">暂无数据</div>`;
+
+  document.getElementById("rankBody").innerHTML = rl.map((x,i)=>{
+    const l=latest(x.p); const w=(x.cum/maxCum*100);
+    return `<tr><td class="${i===0?'rank1':''}">${i+1}</td>
+      <td class="name"><span class="dot" style="background:${x.p.color}"></span>${x.p.name}</td>
+      <td>${f1(x.p.baseline)}</td><td>${l?f1(l.weight):'—'}</td>
+      <td class="${x.cum>=0?'pos':'neg'}">${x.cum>=0?'−':''}${f1(Math.abs(x.cum))}%</td>
+      <td><div class="bar"><span style="width:${w}%;background:${x.p.color}"></span></div></td></tr>`;
+  }).join("");
+
+  drawChart();
+  renderAwards();
+  renderPenalty();
+}
+function render(){ renderStats(); renderEntry(); }
+
+function drawChart(){
+  const W=920,H=380,PL=50,PR=22,PT=22,PB=70;
+  const x0=PL,x1=W-PR,y0=PT,y1=H-PB;
+  const start=STATE.comp.start, t=todayISO(), endv = t<STATE.comp.end ? t : STATE.comp.end;
+  const initDate=addDays(start,-1);
+  const domainStart=initDate;
+  const vis=STATE.participants.filter(p=>!HIDDEN[p.id]);
+  const allW=[]; vis.forEach(p=>{ allW.push(p.baseline); getReadings(p).forEach(r=>allW.push(r.weight)); });
+  const box=document.getElementById("lineChart");
+  if(!allW.length){ box.innerHTML='<div class="empty">暂无数据</div>'; return; }
+
+  let minW=Math.floor(Math.min(...allW)*2)/2 - 0.5;
+  let maxW=Math.ceil(Math.max(...allW)*2)/2 + 0.5;
+  if(maxW-minW<3) maxW=minW+3;
+
+  const tot=Math.max(1,daysBetween(domainStart,endv));
+  const xFor=d=> x0+(daysBetween(domainStart,d)/tot)*(x1-x0);
+  const yFor=w=> y1-((w-minW)/(maxW-minW))*(y1-y0);
+  CHART={x0,x1,start:domainStart,tot,y0,y1,initDate};
+
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
+
+  const ySteps=5;
+  for(let i=0;i<=ySteps;i++){
+    const v=minW+(maxW-minW)*i/ySteps;
+    const y=yFor(v);
+    svg+=`<line x1="${x0}" y1="${y.toFixed(1)}" x2="${x1}" y2="${y.toFixed(1)}" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="3,3"/>`;
+    svg+=`<text x="${x0-10}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11" fill="#9ca3af" font-weight="600">${f1(v)}</text>`;
+  }
+  svg+=`<text x="${x0-38}" y="${(y0+(y1-y0)/2).toFixed(1)}" text-anchor="middle" font-size="11" fill="#6b7280" font-weight="700" transform="rotate(-90 ${x0-38} ${(y0+(y1-y0)/2).toFixed(1)})">体重 (kg)</text>`;
+
+  const ticks=[initDate];
+  const step = daysBetween(start,endv)<=12 ? 2 : daysBetween(start,endv)<=31 ? 3 : 5;
+  for(let i=0;i<=daysBetween(start,endv);i+=step){ const d=addDays(start,Math.min(i,daysBetween(start,endv))); if(d<=endv) ticks.push(d); }
+  if(ticks[ticks.length-1]!==endv) ticks.push(endv);
+  ticks.forEach(d=>{
+    const x=xFor(d);
+    const isInit=d===initDate;
+    svg+=`<text x="${x.toFixed(1)}" y="${y1+20}" text-anchor="middle" font-size="${isInit?12:11}" fill="${isInit?'#374151':'#6b7280'}" font-weight="${isInit?800:600}">${isInit?'初始值':fmtMD(d)}</text>`;
+    svg+=`<line x1="${x.toFixed(1)}" y1="${y1}" x2="${x.toFixed(1)}" y2="${(y1+4).toFixed(1)}" stroke="${isInit?'#374151':'#9ca3af'}" stroke-width="${isInit?1.6:1}"/>`;
+  });
+
+  if(!HIDDEN["莹"]){
+    const jx=xFor("2026-08-06");
+    if(jx>=x0-1 && jx<=x1+1){
+      svg+=`<line x1="${jx.toFixed(1)}" y1="${y0}" x2="${jx.toFixed(1)}" y2="${y1}" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.5"/>`;
+      svg+=`<text x="${(jx+5).toFixed(1)}" y="${(y0+13).toFixed(1)}" font-size="10.5" fill="#059669" font-weight="700">莹 8/6 加入</text>`;
+    }
+  }
+
+  vis.forEach(p=>{
+    const r=getReadings(p);
+    if(!r.length) return;
+    let raw=[{date:initDate, weight:p.baseline}, ...r.map(x=>({date:x.date, weight:x.weight}))];
+    const pts=raw.map(x=>({date:x.date, x:xFor(x.date), y:yFor(x.weight), w:x.weight, isBase:(x.date===initDate)}));
+    if(pts.length>=2){
+      const path = pts.map((pt,i)=> i===0? `M ${pt.x.toFixed(1)},${pt.y.toFixed(1)}` : `L ${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(" ");
+      svg+=`<path d="${path}" fill="none" stroke="${p.color}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+    pts.forEach(pt=>{
+      if(pt.isBase){
+        svg+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="6.5" fill="#ffffff" stroke="${p.color}" stroke-width="3" class="pt" data-date="${pt.date}" data-pid="${p.id}" style="cursor:pointer">
+          <title>${p.name} · 初始体重起点 · ${f1(pt.w)} kg</title></circle>`;
+      } else {
+        svg+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5" fill="${p.color}" stroke="#ffffff" stroke-width="2.2" class="pt" data-date="${pt.date}" data-pid="${p.id}" style="cursor:pointer">
+          <title>${p.name} · ${pt.date} · ${f1(pt.w)} kg</title></circle>`;
+      }
+    });
+  });
+
+  svg+=`<line id="guideLine" x1="0" y1="${y0}" x2="0" y2="${y1}" stroke="#6b7280" stroke-width="1" stroke-dasharray="4,3" style="opacity:0"/>`;
+  svg+=`</svg>`;
+
+  box.innerHTML = `<div class="chart-tip" id="chartTip"></div>`+svg;
+  attachHover();
+
+  document.getElementById("chartLegend").innerHTML = STATE.participants.map(p=>
+    `<span data-id="${p.id}" class="${HIDDEN[p.id]?'off':''}"><span class="ldot" style="background:${p.color}"></span>${p.name}</span>`).join("");
+}
+
+function attachHover(){
+  const box=document.getElementById("lineChart");
+  const svg=box.querySelector("svg"); if(!svg) return;
+  const tip=document.getElementById("chartTip");
+  const guide=svg.querySelector("#guideLine");
+  svg.addEventListener("mousemove",e=>{
+    const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+    const loc=pt.matrixTransform(svg.getScreenCTM().inverse());
+    const {x0,x1,start,tot,initDate}=CHART;
+    let idx=Math.round((loc.x-x0)/(x1-x0)*tot); idx=Math.max(0,Math.min(tot,idx));
+    const date=addDays(start,idx);
+    const gx=x0+(idx/tot)*(x1-x0);
+    guide.setAttribute("x1",gx.toFixed(1)); guide.setAttribute("x2",gx.toFixed(1)); guide.style.opacity=1;
+    const atInit = date===initDate;
+    let rows="";
+    STATE.participants.forEach(p=>{
+      if(HIDDEN[p.id]) return;
+      const w = atInit ? p.baseline : (STATE.records[date]? STATE.records[date][p.id] : null);
+      rows+=`<div class="row"><span><span class="dot" style="background:${p.color};width:8px;height:8px;margin-right:6px"></span>${p.name}</span><b>${w!=null? f1(w)+" kg":"—"}</b></div>`;
+    });
+    tip.innerHTML=`<div style="font-weight:800;margin-bottom:6px;font-size:13px">📅 ${atInit?'初始值':date}</div>${rows||'<div style="opacity:.7">已隐藏全部</div>'}`;
+    tip.style.opacity=1;
+    const rect=box.getBoundingClientRect();
+    let tx=e.clientX-rect.left+18, ty=e.clientY-rect.top+14;
+    if(tx>rect.width-170) tx=e.clientX-rect.left-180;
+    tip.style.left=tx+"px"; tip.style.top=ty+"px";
+    svg.querySelectorAll("circle.pt").forEach(c=>{
+      const isThis = c.getAttribute("data-date")===date;
+      c.setAttribute("r", isThis? "7" : "5");
+      c.setAttribute("stroke-width", isThis? "3" : "2.2");
+    });
+  });
+  svg.addEventListener("mouseleave",()=>{
+    tip.style.opacity=0; guide.style.opacity=0;
+    svg.querySelectorAll("circle.pt").forEach(c=>{ c.setAttribute("r","5"); c.setAttribute("stroke-width","2.2"); });
+  });
+}
+
+function renderAwards(){
+  const L=awardLeaders();
+  const items=[
+    {k:"破冰",ico:"🥉",nm:"破冰奖",amt:PRIZE.破冰,desc:"第1个月减重%最高",lead:L.pobing,key:"pct"},
+    {k:"突破",ico:"🥈",nm:"突破奖",amt:PRIZE.突破,desc:"第2个月减重%最高",lead:L.tupo,key:"pct"},
+    {k:"总冠军",ico:"🥇",nm:"总冠军",amt:PRIZE.总冠军,desc:"3个月累计减重%最高",lead:L.champion,key:"cum"},
+    {k:"逆袭",ico:"🚀",nm:"逆袭奖",amt:PRIZE.逆袭,desc:"第3个月单月减重%最高",lead:L.nixi,key:"pct"},
+    {k:"全员",ico:"🤝",nm:"全员奖",amt:PRIZE.全员,desc:"4人都完赛且各自累计≥3%",lead:null,special:"all"},
+    {k:"坚持",ico:"⭐",nm:"最佳坚持奖",amt:PRIZE.坚持,desc:"3个月打卡率最高",lead:L.jianchi,key:"chk"},
+  ];
+  document.getElementById("awardCards").innerHTML = items.map(it=>{
+    let leadHtml;
+    if(it.special==="all"){
+      leadHtml = L.allOk? `<div class="lead" style="color:#059669">✅ 全员达标，4人各得 <b>¥15</b></div>`
+        : `<div class="lead">当前 <b>${L.reached}/4</b> 人累计≥3%<span class="pill">差${4-L.reached}人</span></div>`;
+    } else if(it.lead){
+      const val = it.key==="cum"? f1(it.lead.cum)+"%" : it.key==="pct"? f1(it.lead.s.pct)+"%" : f1(it.lead.v)+"%";
+      leadHtml = `<div class="lead">领先：<b style="color:${it.lead.p.color}">${it.lead.p.name}</b> · ${val}</div>`;
+    } else { leadHtml = `<div class="lead" style="color:var(--sub)">暂无数据</div>`; }
+    return `<div class="award"><div class="amt">¥${it.amt}</div><div class="ico">${it.ico}</div>
+      <div class="nm">${it.nm}</div><div class="desc">${it.desc}</div>${leadHtml}</div>`;
+  }).join("");
+
+  const proj=prizeProjection();
+  document.getElementById("prizeBody").innerHTML = STATE.participants.map(p=>{
+    const cell=(ld,amt)=> (ld&&ld.p&&ld.p.id===p.id)? `<td class="pos">¥${amt}</td>` : `<td style="color:#cbd2e0">—</td>`;
+    const allCell = L.allOk? `<td class="pos">¥15</td>` : `<td style="color:#cbd2e0">—</td>`;
+    return `<tr><td class="name"><span class="dot" style="background:${p.color}"></span>${p.name}</td>
+      ${cell(L.pobing,40)}${cell(L.tupo,60)}${cell(L.champion,160)}${cell(L.nixi,60)}${cell(L.jianchi,20)}
+      ${allCell}<td class="rank1">¥${proj[p.id]}</td></tr>`;
+  }).join("");
+}
+
+function renderPenalty(){
+  const curM=Math.min(3,Math.max(1,Number(todayISO().slice(5,7))-7));
+  document.getElementById("penList").innerHTML=STATE.participants.map(p=>{
+    const ms=missed(p);
+    const ms2=monthStats(p,curM);
+    const reb=ms2&&ms2.rebounding;
+    const coffee=ms>=2;
+    const tag= coffee? `<span class="pill warn">☕请咖啡</span>` : (ms===1?`<span class="pill">缺卡1次</span>`:`<span class="pill ok">全勤</span>`);
+    const rebTag= reb? `<span class="pill warn">⚠️当月反弹</span>` : (ms2?`<span class="pill ok">未反弹</span>`:``);
+    return `<div class="pen"><span><span class="dot" style="background:${p.color}"></span><b>${p.name}</b> &nbsp;缺卡 ${ms} 次 ${tag} ${rebTag}</span>
+      <span class="right" style="color:var(--sub);font-size:12.5px">打卡率 ${f1(checkin(p,todayISO()))}%</span></div>`;
+  }).join("");
+}
+
+function renderEntry(){
+  const id=document.getElementById("inDate"); const t=todayISO();
+  if(!id.value) id.value=t;
+  const inDate=id.value;
+
+  document.getElementById("entryInputs").innerHTML = STATE.participants.map(p=>{
+    const prev = prevReading(p, inDate);
+    const cur = (STATE.records[inDate]&&STATE.records[inDate][p.id]!=null)? STATE.records[inDate][p.id] : "";
+    return `<div class="entry-card" style="--c:${p.color}">
+      <div class="pname"><span class="dot" style="background:${p.color}"></span>${p.name}</div>
+      <div class="plabel">体重 (kg)</div>
+      <input type="number" step="0.1" id="w_${p.id}" value="${cur!==""?cur:""}" placeholder="--">
+      <div class="prev" id="prev_${p.id}"></div>
+    </div>`;
+  }).join("");
+
+  STATE.participants.forEach(p=>{
+    const prev = prevReading(p, inDate);
+    const el = document.getElementById("prev_"+p.id);
+    if(!el) return;
+    if(prev){
+      const inp = document.getElementById("w_"+p.id);
+      const curVal = inp.value===""? null : parseFloat(inp.value);
+      if(curVal!=null && !isNaN(curVal)){
+        const d = curVal - prev.weight;
+        const cls = d<0? "down" : d>0? "up" : "flat";
+        const sign = d>0? "+" : "";
+        el.innerHTML = `前日 <b>${f1(prev.weight)}</b> · 较前日 <span class="delta ${cls}">${sign}${f1(d)}</span>`;
+      } else {
+        el.innerHTML = `前日 <b>${f1(prev.weight)}</b> kg`;
+      }
+    } else {
+      el.innerHTML = `尚未有历史记录`;
+    }
+  });
+
+  document.getElementById("baseInputs").innerHTML = STATE.participants.map(p=>
+    `<div><label>${p.name} 初始</label><input type="number" step="0.1" value="${p.baseline}" id="b_${p.id}"></div>`).join("");
+}
+
+/* ============ 同步 ============ */
+let lastSync=0;
+function updateSyncLabel(){
+  const el=document.getElementById('syncStatus'); if(!el) return;
+  el.textContent = lastSync? ('上次同步 '+new Date(lastSync).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})) : '尚未同步';
+}
+async function sync(){
+  try{ const data=await fetchState(); STATE=data; renderStats(); lastSync=Date.now(); updateSyncLabel(); }
+  catch(e){ const el=document.getElementById('syncStatus'); if(el) el.textContent='同步失败：'+e.message; }
+}
+function startSync(){
+  setInterval(sync, 30000);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) sync(); });
+}
+
+/* ============ 事件 ============ */
+document.getElementById("entryForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const d=document.getElementById("inDate").value; if(!d){alert("请选择日期");return;}
+  const values={};
+  STATE.participants.forEach(p=>{
+    const v=document.getElementById("w_"+p.id).value;
+    values[p.id]=(v===""||v==null)? null : parseFloat(v);
+  });
+  const btn=e.target.querySelector("button[type=submit]");
+  const old=btn.innerHTML; btn.innerHTML="保存中…";
+  try{
+    const data=await pushBulk(d, values);
+    STATE=data; render(); lastSync=Date.now(); updateSyncLabel();
+    btn.innerHTML="✅ 已保存到服务器"; setTimeout(()=>{ btn.innerHTML=old; },1200);
+  }catch(err){ btn.innerHTML=old; alert(err.message); }
+});
+
+document.getElementById("inDate").addEventListener("change",()=>{
+  const inDate=document.getElementById("inDate").value;
+  STATE.participants.forEach(p=>{
+    const cur = (STATE.records[inDate]&&STATE.records[inDate][p.id]!=null)? STATE.records[inDate][p.id] : "";
+    const inp=document.getElementById("w_"+p.id); if(inp) inp.value = cur!==""?cur:"";
+  });
+  STATE.participants.forEach(p=>{
+    const prev=prevReading(p,inDate);
+    const el=document.getElementById("prev_"+p.id); if(!el) return;
+    if(prev){
+      const inp=document.getElementById("w_"+p.id);
+      const curVal=inp.value===""? null : parseFloat(inp.value);
+      if(curVal!=null && !isNaN(curVal)){
+        const d=curVal-prev.weight; const cls=d<0?"down":d>0?"up":"flat"; const sign=d>0?"+":"";
+        el.innerHTML=`前日 <b>${f1(prev.weight)}</b> · 较前日 <span class="delta ${cls}">${sign}${f1(d)}</span>`;
+      } else el.innerHTML=`前日 <b>${f1(prev.weight)}</b> kg`;
+    } else el.innerHTML=`尚未有历史记录`;
+  });
+});
+
+document.getElementById("entryInputs").addEventListener("input",e=>{
+  const id=e.target.id; if(!id||!id.startsWith("w_")) return;
+  const pid=id.slice(2); const inDate=document.getElementById("inDate").value;
+  const prev=prevReading(STATE.participants.find(p=>p.id===pid), inDate);
+  const el=document.getElementById("prev_"+pid); if(!el) return;
+  const v=e.target.value; const curVal=(v===""||v==null)? null : parseFloat(v);
+  if(prev && curVal!=null && !isNaN(curVal)){
+    const d=curVal-prev.weight; const cls=d<0?"down":d>0?"up":"flat"; const sign=d>0?"+":"";
+    el.innerHTML=`前日 <b>${f1(prev.weight)}</b> · 较前日 <span class="delta ${cls}">${sign}${f1(d)}</span>`;
+  } else if(prev) el.innerHTML=`前日 <b>${f1(prev.weight)}</b> kg`;
+  else el.innerHTML=`尚未有历史记录`;
+});
+
+document.getElementById("btnToday").addEventListener("click",()=>{
+  const id=document.getElementById("inDate"); id.value=todayISO();
+  id.dispatchEvent(new Event("change"));
+});
+
+document.getElementById("btnReset").addEventListener("click", async ()=>{
+  if(confirm("确定用初始数据覆盖服务器上的所有记录？此操作不可撤销。")){
+    try{ STATE=await resetServer(); render(); lastSync=Date.now(); updateSyncLabel(); alert("已重置为初始数据"); }
+    catch(err){ alert(err.message); }
+  }
+});
+
+document.getElementById("baseInputs").addEventListener("change", async e=>{
+  const id=e.target.id; if(id&&id.startsWith("b_")){
+    const pid=id.slice(2); const p=STATE.participants.find(x=>x.id===pid);
+    const v=parseFloat(e.target.value);
+    if(p&&!isNaN(v)){
+      try{ const data=await pushBaseline(pid,v); STATE=data; render(); lastSync=Date.now(); updateSyncLabel(); }
+      catch(err){ alert(err.message); }
+    }
+  }
+});
+
+document.getElementById("chartLegend").addEventListener("click",e=>{
+  const el=e.target.closest("[data-id]"); if(!el) return;
+  const id=el.dataset.id; HIDDEN[id]=!HIDDEN[id]; el.classList.toggle("off"); drawChart();
+});
+
+document.getElementById("btnSync").addEventListener("click", sync);
+
+document.getElementById("passInput").addEventListener("input", e=>{ localStorage.setItem('jp', e.target.value); });
+
+document.getElementById("btnExport").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(STATE,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="减脂挑战赛备份.json"; a.click();
+});
+document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("fileInput").click());
+document.getElementById("fileInput").addEventListener("change", async e=>{
+  const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=async ()=>{
+    try{
+      const o=JSON.parse(r.result);
+      if(!o.records){ alert("导入失败：文件缺少 records 字段"); return; }
+      for(const date of Object.keys(o.records)){
+        const values={}; STATE.participants.forEach(p=>{ const w=o.records[date][p.id]; values[p.id]=(w==null)?null:Number(w); });
+        await pushBulk(date, values);
+      }
+      STATE=await fetchState(); render(); lastSync=Date.now(); updateSyncLabel();
+      alert("导入成功，已合并到服务器");
+    }catch(err){ alert("导入失败："+(err.message||err)); }
+  };
+  r.readAsText(f);
+  e.target.value='';
+});
+
+/* ============ 启动 ============ */
+async function boot(){
+  const pe=document.getElementById('passInput'); if(pe) pe.value=localStorage.getItem('jp')||'';
+  const tileBox=document.getElementById('rankTiles');
+  tileBox.innerHTML='<div class="empty">加载中…</div>';
+  try{ STATE=await fetchState(); }
+  catch(e){ tileBox.innerHTML='<div class="empty">无法连接服务器：'+e.message+'</div>'; return; }
+  render(); updateSyncLabel(); startSync();
+}
+boot();
+</script>
+</body>
+</html>
